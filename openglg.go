@@ -416,13 +416,27 @@ func (sg *OpenGLGraphics) Scatter(points []chart.EPoint, plotstyle chart.PlotSty
 
 	// TODO: Implement error bars/symbols
 
-	var vertices glh.ColorVertices
+	buffer := glh.NewMeshBuffer(glh.RenderArrays,
+		glh.NewPositionAttr(2, gl.DOUBLE, gl.STATIC_DRAW),
+		glh.NewColorAttr(3, gl.UNSIGNED_INT, gl.STATIC_DRAW))
+
+	// var vertices glh.ColorVertices
+
+	positions := make([]float64, len(points)*2)
+	colors := make([]uint32, len(points)*3)
 
 	for _, p := range points {
-		vertices.Add(glh.ColorVertex{
-			glh.MkRGBA(style.LineColor),
-			glh.Vertex{float32(p.X), float32(p.Y)}})
+		r, g, b, _ := style.LineColor.RGBA()
+
+		colors = append(colors, r, g, b)
+		positions = append(positions, p.X, p.Y)
+
+		// vertices.Add(glh.ColorVertex{
+		// 	glh.MkRGBA(style.LineColor),
+		// 	glh.Vertex{float32(p.X), float32(p.Y)}})
 	}
+
+	buffer.Add()
 
 	if style.LineWidth != 0 {
 		gl.LineWidth(float32(style.LineWidth))
@@ -434,7 +448,7 @@ func (sg *OpenGLGraphics) Scatter(points []chart.EPoint, plotstyle chart.PlotSty
 		gl.Enable(gl.BLEND)
 		gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
 
-		vertices.Draw(gl.LINE_STRIP)
+		buffer.Render(gl.LINE_STRIP)
 	})
 
 	/***********************************************
